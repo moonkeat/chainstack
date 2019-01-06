@@ -16,8 +16,8 @@ import (
 
 type fakeUserService struct{}
 
-func (s fakeUserService) CreateUser(email string, password string, isAdmin bool) (bool, error) {
-	return true, nil
+func (s fakeUserService) CreateUser(email string, password string, isAdmin bool) error {
+	return nil
 }
 
 func (s fakeUserService) AuthenticateUser(email string, password string) (bool, error) {
