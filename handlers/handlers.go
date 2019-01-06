@@ -9,10 +9,12 @@ import (
 	"github.com/unrolled/render"
 
 	"github.com/moonkeat/chainstack/responses"
+	"github.com/moonkeat/chainstack/services"
 )
 
 type Env struct {
-	Render *render.Render
+	Render      *render.Render
+	UserService services.UserService
 }
 
 type Handler struct {
@@ -52,10 +54,10 @@ func (h Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				Message: err.Error(),
 			})
 		default:
-			log.Error().Err(err).Bytes("reqbody", body).Str("requrl", r.URL.Path).Msg("Interal server error.")
+			log.Error().Err(err).Bytes("reqbody", body).Str("requrl", r.URL.Path).Msg("Internal server error.")
 			h.Render.JSON(w, http.StatusInternalServerError, responses.Error{
 				Code:    http.StatusInternalServerError,
-				Message: err.Error(),
+				Message: "internal server error",
 			})
 		}
 	}
