@@ -54,15 +54,21 @@ func TokenHandler(env *Env, w http.ResponseWriter, r *http.Request) error {
 		}
 	}
 
-	scope := "resources"
+	scope := []string{"resources"}
 	if authenticatedUser.Admin {
-		scope = "resources,users"
+		scope = append(scope, "users")
+	}
+
+	token, err := env.TokenService.CreateToken(DefaultTokenExpiresIn, scope, authenticatedUser.ID)
+	if err != nil {
+		return err
 	}
 
 	env.Render.JSON(w, http.StatusOK, &responses.Token{
-		TokenType: "bearer",
-		ExpiresIn: int(DefaultTokenExpiresIn.Seconds()),
-		Scope:     scope,
+		AccessToken: token,
+		TokenType:   "bearer",
+		ExpiresIn:   int(DefaultTokenExpiresIn.Seconds()),
+		Scope:       strings.Join(scope, ","),
 	})
 
 	return nil

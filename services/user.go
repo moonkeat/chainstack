@@ -61,7 +61,7 @@ func (s userService) CreateUser(email string, password string, isAdmin bool) err
 
 func (s userService) AuthenticateUser(email string, password string) (*models.User, error) {
 	user := models.User{}
-	err := s.DB.Get(&user, "SELECT password FROM users WHERE lower(email) = lower($1)", email)
+	err := s.DB.Get(&user, "SELECT id, email, password, admin FROM users WHERE lower(email) = lower($1)", email)
 	if err != nil && err != sql.ErrNoRows {
 		return nil, err
 	}

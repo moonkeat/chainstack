@@ -34,8 +34,9 @@ func main() {
 
 	log.Info().Msgf("Server is running and listen on %s", addr)
 	err = http.ListenAndServe(addr, handlers.NewHandler(&handlers.Env{
-		Render:      render.New(),
-		UserService: services.NewUserService(db),
+		Render:       render.New(),
+		UserService:  services.NewUserService(db),
+		TokenService: services.NewTokenService(db),
 	}))
 	if err != nil && err != http.ErrServerClosed {
 		log.Fatal().Err(err).Msgf("Server could not listen on %s", addr)

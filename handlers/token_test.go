@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/rs/zerolog"
 	"github.com/unrolled/render"
@@ -37,12 +38,24 @@ func (s fakeUserService) AuthenticateUser(email string, password string) (*model
 	return nil, nil
 }
 
+type fakeTokenService struct {
+	ReturnError bool
+}
+
+func (s fakeTokenService) CreateToken(expiresIn time.Duration, scope []string, userID int) (string, error) {
+	if s.ReturnError {
+		return "", fmt.Errorf("some error here")
+	}
+	return "fakeToken", nil
+}
+
 func TestTokenHandler(t *testing.T) {
 	zerolog.SetGlobalLevel(zerolog.WarnLevel)
 
 	handler := handlers.NewHandler(&handlers.Env{
-		Render:      render.New(),
-		UserService: &fakeUserService{},
+		Render:       render.New(),
+		UserService:  &fakeUserService{},
+		TokenService: &fakeTokenService{},
 	})
 
 	// Should return 400 if no request body
@@ -187,7 +200,7 @@ func TestTokenHandler(t *testing.T) {
 		t.Errorf("handler returned wrong status code: got %v want %v",
 			status, http.StatusOK)
 	}
-	expected = `{"access_token":"","token_type":"bearer","expires_in":3600,"scope":"resources"}`
+	expected = `{"access_token":"fakeToken","token_type":"bearer","expires_in":3600,"scope":"resources"}`
 	if rr.Body.String() != expected {
 		t.Errorf("handler returned unexpected body: got %v want %v",
 			rr.Body.String(), expected)
@@ -209,7 +222,35 @@ func TestTokenHandler(t *testing.T) {
 		t.Errorf("handler returned wrong status code: got %v want %v",
 			status, http.StatusOK)
 	}
-	expected = `{"access_token":"","token_type":"bearer","expires_in":3600,"scope":"resources,users"}`
+	expected = `{"access_token":"fakeToken","token_type":"bearer","expires_in":3600,"scope":"resources,users"}`
+	if rr.Body.String() != expected {
+		t.Errorf("handler returned unexpected body: got %v want %v",
+			rr.Body.String(), expected)
+	}
+
+	handler = handlers.NewHandler(&handlers.Env{
+		Render:       render.New(),
+		UserService:  &fakeUserService{},
+		TokenService: &fakeTokenService{ReturnError: true},
+	})
+
+	// Should return 500 if failed to create token
+	rr = httptest.NewRecorder()
+	params = url.Values{}
+	params.Set("grant_type", "client_credentials")
+	params.Set("client_id", "admin@email.com")
+	params.Set("client_secret", "adminpassword")
+	req, err = http.NewRequest("POST", "/token", strings.NewReader(params.Encode()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	handler.ServeHTTP(rr, req)
+	if status := rr.Code; status != http.StatusInternalServerError {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusInternalServerError)
+	}
+	expected = `{"code":500,"message":"internal server error"}`
 	if rr.Body.String() != expected {
 		t.Errorf("handler returned unexpected body: got %v want %v",
 			rr.Body.String(), expected)
