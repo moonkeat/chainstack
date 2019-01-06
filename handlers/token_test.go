@@ -12,6 +12,7 @@ import (
 	"github.com/unrolled/render"
 
 	"github.com/moonkeat/chainstack/handlers"
+	"github.com/moonkeat/chainstack/models"
 )
 
 type fakeUserService struct{}
@@ -20,16 +21,20 @@ func (s fakeUserService) CreateUser(email string, password string, isAdmin bool)
 	return nil
 }
 
-func (s fakeUserService) AuthenticateUser(email string, password string) (bool, error) {
+func (s fakeUserService) AuthenticateUser(email string, password string) (*models.User, error) {
 	if email == "internalerror" {
-		return false, fmt.Errorf("intermal server error occurred")
+		return nil, fmt.Errorf("intermal server error occurred")
 	}
 
-	if email != "correct@email.com" || password != "correctpassword" {
-		return false, nil
+	if email == "correct@email.com" && password == "correctpassword" {
+		return &models.User{}, nil
 	}
 
-	return true, nil
+	if email == "admin@email.com" && password == "adminpassword" {
+		return &models.User{Admin: true}, nil
+	}
+
+	return nil, nil
 }
 
 func TestTokenHandler(t *testing.T) {
@@ -182,7 +187,29 @@ func TestTokenHandler(t *testing.T) {
 		t.Errorf("handler returned wrong status code: got %v want %v",
 			status, http.StatusOK)
 	}
-	expected = `{"access_token":"","token_type":"","expires_in":0,"scope":""}`
+	expected = `{"access_token":"","token_type":"bearer","expires_in":3600,"scope":"resources"}`
+	if rr.Body.String() != expected {
+		t.Errorf("handler returned unexpected body: got %v want %v",
+			rr.Body.String(), expected)
+	}
+
+	// Should return 200 with different scope if credential is admin
+	rr = httptest.NewRecorder()
+	params = url.Values{}
+	params.Set("grant_type", "client_credentials")
+	params.Set("client_id", "admin@email.com")
+	params.Set("client_secret", "adminpassword")
+	req, err = http.NewRequest("POST", "/token", strings.NewReader(params.Encode()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	handler.ServeHTTP(rr, req)
+	if status := rr.Code; status != http.StatusOK {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusOK)
+	}
+	expected = `{"access_token":"","token_type":"bearer","expires_in":3600,"scope":"resources,users"}`
 	if rr.Body.String() != expected {
 		t.Errorf("handler returned unexpected body: got %v want %v",
 			rr.Body.String(), expected)

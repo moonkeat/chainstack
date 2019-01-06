@@ -4,11 +4,16 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/moonkeat/chainstack/responses"
 )
 
-const GrantTypeClientCredentials = "client_credentials"
+const (
+	GrantTypeClientCredentials = "client_credentials"
+
+	DefaultTokenExpiresIn = 1 * time.Hour
+)
 
 func TokenHandler(env *Env, w http.ResponseWriter, r *http.Request) error {
 	r.ParseForm()
@@ -37,18 +42,28 @@ func TokenHandler(env *Env, w http.ResponseWriter, r *http.Request) error {
 		}
 	}
 
-	authenticated, err := env.UserService.AuthenticateUser(email, password)
+	authenticatedUser, err := env.UserService.AuthenticateUser(email, password)
 	if err != nil {
 		return err
 	}
 
-	if !authenticated {
+	if authenticatedUser == nil {
 		return HandlerError{
 			StatusCode:  http.StatusUnauthorized,
 			ActualError: fmt.Errorf("invalid credentials"),
 		}
 	}
 
-	env.Render.JSON(w, http.StatusOK, &responses.Token{})
+	scope := "resources"
+	if authenticatedUser.Admin {
+		scope = "resources,users"
+	}
+
+	env.Render.JSON(w, http.StatusOK, &responses.Token{
+		TokenType: "bearer",
+		ExpiresIn: int(DefaultTokenExpiresIn.Seconds()),
+		Scope:     scope,
+	})
+
 	return nil
 }

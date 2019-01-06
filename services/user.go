@@ -14,7 +14,7 @@ import (
 
 type UserService interface {
 	CreateUser(email string, password string, isAdmin bool) error
-	AuthenticateUser(email string, password string) (bool, error)
+	AuthenticateUser(email string, password string) (*models.User, error)
 }
 
 type userService struct {
@@ -59,18 +59,18 @@ func (s userService) CreateUser(email string, password string, isAdmin bool) err
 	return nil
 }
 
-func (s userService) AuthenticateUser(email string, password string) (bool, error) {
+func (s userService) AuthenticateUser(email string, password string) (*models.User, error) {
 	user := models.User{}
 	err := s.DB.Get(&user, "SELECT password FROM users WHERE lower(email) = lower($1)", email)
 	if err != nil && err != sql.ErrNoRows {
-		return false, err
+		return nil, err
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
-		return false, nil
+		return nil, nil
 	}
 
-	return true, nil
+	return &user, nil
 }
 
 func NewUserService(db *sqlx.DB) UserService {
