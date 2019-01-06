@@ -49,6 +49,10 @@ func (s fakeTokenService) CreateToken(expiresIn time.Duration, scope []string, u
 	return "fakeToken", nil
 }
 
+func (s fakeTokenService) CleanExpiredTokens() error {
+	return nil
+}
+
 func TestTokenHandler(t *testing.T) {
 	zerolog.SetGlobalLevel(zerolog.WarnLevel)
 

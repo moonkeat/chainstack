@@ -10,6 +10,7 @@ import (
 
 type TokenService interface {
 	CreateToken(expiresIn time.Duration, scope []string, userID int) (string, error)
+	CleanExpiredTokens() error
 }
 
 type tokenService struct {
@@ -25,6 +26,15 @@ func (s tokenService) CreateToken(expiresIn time.Duration, scope []string, userI
 	}
 
 	return token.String(), nil
+}
+
+func (s tokenService) CleanExpiredTokens() error {
+	_, err := s.DB.Exec("DELETE FROM access_tokens WHERE expires < NOW()")
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func NewTokenService(db *sqlx.DB) TokenService {

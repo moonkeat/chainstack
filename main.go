@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -31,6 +32,16 @@ func main() {
 	if addr == "" {
 		addr = ":8080"
 	}
+
+	go func() {
+		for {
+			err := services.NewTokenService(db).CleanExpiredTokens()
+			if err != nil {
+				log.Error().Err(err).Msgf("Failed to clean expired tokens")
+			}
+			time.Sleep(1 * time.Hour)
+		}
+	}()
 
 	log.Info().Msgf("Server is running and listen on %s", addr)
 	err = http.ListenAndServe(addr, handlers.NewHandler(&handlers.Env{
