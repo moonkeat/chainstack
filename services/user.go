@@ -17,10 +17,6 @@ type UserService interface {
 	AuthenticateUser(email string, password string) (*models.User, error)
 }
 
-type userService struct {
-	DB *sqlx.DB
-}
-
 type UserValidationError struct {
 	Field  string
 	Reason string
@@ -28,6 +24,10 @@ type UserValidationError struct {
 
 func (e UserValidationError) Error() string {
 	return fmt.Sprintf("invalid %s: %s", e.Field, e.Reason)
+}
+
+type userService struct {
+	DB *sqlx.DB
 }
 
 func (s userService) CreateUser(email string, password string, isAdmin bool) error {

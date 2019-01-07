@@ -1,57 +1,17 @@
 package handlers_test
 
 import (
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/rs/zerolog"
 	"github.com/unrolled/render"
 
 	"github.com/moonkeat/chainstack/handlers"
-	"github.com/moonkeat/chainstack/models"
 )
-
-type fakeUserService struct{}
-
-func (s fakeUserService) CreateUser(email string, password string, isAdmin bool) error {
-	return nil
-}
-
-func (s fakeUserService) AuthenticateUser(email string, password string) (*models.User, error) {
-	if email == "internalerror" {
-		return nil, fmt.Errorf("intermal server error occurred")
-	}
-
-	if email == "correct@email.com" && password == "correctpassword" {
-		return &models.User{}, nil
-	}
-
-	if email == "admin@email.com" && password == "adminpassword" {
-		return &models.User{Admin: true}, nil
-	}
-
-	return nil, nil
-}
-
-type fakeTokenService struct {
-	ReturnError bool
-}
-
-func (s fakeTokenService) CreateToken(expiresIn time.Duration, scope []string, userID int) (string, error) {
-	if s.ReturnError {
-		return "", fmt.Errorf("some error here")
-	}
-	return "fakeToken", nil
-}
-
-func (s fakeTokenService) CleanExpiredTokens() error {
-	return nil
-}
 
 func TestTokenHandler(t *testing.T) {
 	zerolog.SetGlobalLevel(zerolog.WarnLevel)
@@ -226,7 +186,7 @@ func TestTokenHandler(t *testing.T) {
 		t.Errorf("handler returned wrong status code: got %v want %v",
 			status, http.StatusOK)
 	}
-	expected = `{"access_token":"fakeToken","token_type":"bearer","expires_in":3600,"scope":"resources,users"}`
+	expected = `{"access_token":"fakeToken","token_type":"bearer","expires_in":3600,"scope":"resources users"}`
 	if rr.Body.String() != expected {
 		t.Errorf("handler returned unexpected body: got %v want %v",
 			rr.Body.String(), expected)

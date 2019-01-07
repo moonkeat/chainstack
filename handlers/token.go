@@ -68,7 +68,7 @@ func TokenHandler(env *Env, w http.ResponseWriter, r *http.Request) error {
 		AccessToken: token,
 		TokenType:   "bearer",
 		ExpiresIn:   int(DefaultTokenExpiresIn.Seconds()),
-		Scope:       strings.Join(scope, ","),
+		Scope:       strings.Join(scope, " "),
 	})
 
 	return nil
