@@ -1,6 +1,7 @@
 package handlers_test
 
 import (
+	"database/sql"
 	"fmt"
 	"net/http"
 	"time"
@@ -105,6 +106,21 @@ func (s fakeResourceService) CreateResource(userID int) (*models.Resource, error
 		Key:       "resource1",
 		CreatedAt: time.Now().Truncate(24 * time.Hour),
 	}, nil
+}
+
+func (s fakeResourceService) GetResource(userID int, key string) (*models.Resource, error) {
+	if s.ReturnError {
+		return nil, fmt.Errorf("resource service error")
+	}
+
+	if key == "resource1" {
+		return &models.Resource{
+			Key:       "resource1",
+			CreatedAt: time.Now().Truncate(24 * time.Hour),
+		}, nil
+	}
+
+	return nil, sql.ErrNoRows
 }
 
 func (s fakeResourceService) ListResources(userID int) ([]models.Resource, error) {

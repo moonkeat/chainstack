@@ -214,11 +214,10 @@ func TestTokenHandler(t *testing.T) {
 			rr.Body.String(), expected)
 	}
 
+	// Should return 500 if failed to create token
 	handler = fakeHandler(&fakeHandlerOptions{
 		tokenServiceReturnError: true,
 	})
-
-	// Should return 500 if failed to create token
 	rr = httptest.NewRecorder()
 	params = url.Values{}
 	params.Set("grant_type", "client_credentials")

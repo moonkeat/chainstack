@@ -12,6 +12,7 @@ import (
 
 type ResourceService interface {
 	CreateResource(userID int) (*models.Resource, error)
+	GetResource(userID int, key string) (*models.Resource, error)
 	ListResources(userID int) ([]models.Resource, error)
 }
 
@@ -28,6 +29,16 @@ func (s resourceService) CreateResource(userID int) (*models.Resource, error) {
 	}
 
 	return &models.Resource{Key: key.String(), CreatedAt: createdAt, UserID: userID}, nil
+}
+
+func (s resourceService) GetResource(userID int, key string) (*models.Resource, error) {
+	resource := models.Resource{}
+	err := s.DB.Get(&resource, "SELECT key, created_at FROM resources WHERE key = $1 AND user_id = $2", key, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &resource, nil
 }
 
 func (s resourceService) ListResources(userID int) ([]models.Resource, error) {
