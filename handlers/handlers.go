@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/justinas/alice"
 	"github.com/rs/zerolog/log"
 	"github.com/unrolled/render"
 
@@ -69,6 +70,9 @@ func NewHandler(env *Env) http.Handler {
 
 	// authentication
 	r.Handle("/token", Handler{Env: env, H: TokenHandler}).Methods("POST")
+
+	chain := alice.New(AuthMiddleware(env, "resources"))
+	r.Handle("/resources", chain.Then(Handler{Env: env, H: ListResourcesHandler})).Methods("GET")
 
 	return r
 }
