@@ -12,11 +12,17 @@ import (
 )
 
 type fakeHandlerOptions struct {
+	userServiceReturnError     bool
 	tokenServiceReturnError    bool
 	resourceServiceReturnError bool
 }
 
 func fakeHandler(opt *fakeHandlerOptions) http.Handler {
+	userServiceReturnError := false
+	if opt != nil && opt.userServiceReturnError {
+		userServiceReturnError = opt.userServiceReturnError
+	}
+
 	tokenServiceReturnError := false
 	if opt != nil && opt.tokenServiceReturnError {
 		tokenServiceReturnError = opt.tokenServiceReturnError
@@ -29,20 +35,22 @@ func fakeHandler(opt *fakeHandlerOptions) http.Handler {
 
 	return handlers.NewHandler(&handlers.Env{
 		Render:          render.New(),
-		UserService:     &fakeUserService{},
+		UserService:     &fakeUserService{ReturnError: userServiceReturnError},
 		TokenService:    &fakeTokenService{ReturnError: tokenServiceReturnError},
 		ResourceService: &fakeResourceService{ReturnError: resourceServiceReturnError},
 	})
 }
 
-type fakeUserService struct{}
+type fakeUserService struct {
+	ReturnError bool
+}
 
 func (s fakeUserService) CreateUser(email string, password string, isAdmin bool) error {
 	return nil
 }
 
 func (s fakeUserService) AuthenticateUser(email string, password string) (*models.User, error) {
-	if email == "internalerror" {
+	if s.ReturnError {
 		return nil, fmt.Errorf("internal server error occurred")
 	}
 

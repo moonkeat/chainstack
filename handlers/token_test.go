@@ -119,12 +119,40 @@ func TestTokenHandler(t *testing.T) {
 			rr.Body.String(), expected)
 	}
 
-	// Should return 500 if internal server error occurred
+	// Should return 500 if token service error
+	handler = fakeHandler(&fakeHandlerOptions{
+		tokenServiceReturnError: true,
+	})
 	rr = httptest.NewRecorder()
 	params = url.Values{}
 	params.Set("grant_type", "client_credentials")
-	params.Set("client_id", "internalerror")
-	params.Set("client_secret", "anypassword")
+	params.Set("client_id", "correct@email.com")
+	params.Set("client_secret", "correctpassword")
+	req, err = http.NewRequest("POST", "/token", strings.NewReader(params.Encode()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	handler.ServeHTTP(rr, req)
+	if status := rr.Code; status != http.StatusInternalServerError {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusInternalServerError)
+	}
+	expected = `{"code":500,"message":"internal server error"}`
+	if rr.Body.String() != expected {
+		t.Errorf("handler returned unexpected body: got %v want %v",
+			rr.Body.String(), expected)
+	}
+
+	// Should return 500 if user service error
+	handler = fakeHandler(&fakeHandlerOptions{
+		userServiceReturnError: true,
+	})
+	rr = httptest.NewRecorder()
+	params = url.Values{}
+	params.Set("grant_type", "client_credentials")
+	params.Set("client_id", "correct@email.com")
+	params.Set("client_secret", "correctpassword")
 	req, err = http.NewRequest("POST", "/token", strings.NewReader(params.Encode()))
 	if err != nil {
 		t.Fatal(err)
@@ -142,6 +170,7 @@ func TestTokenHandler(t *testing.T) {
 	}
 
 	// Should return 200 if credential valid
+	handler = fakeHandler(nil)
 	rr = httptest.NewRecorder()
 	params = url.Values{}
 	params.Set("grant_type", "client_credentials")

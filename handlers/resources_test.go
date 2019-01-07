@@ -141,7 +141,7 @@ func TestListResourcesHandler(t *testing.T) {
 			rr.Body.String(), expected)
 	}
 
-	// Should return 500 if failed token service error
+	// Should return 500 if token service error
 	handler = fakeHandler(&fakeHandlerOptions{
 		resourceServiceReturnError: true,
 	})
