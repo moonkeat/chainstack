@@ -14,6 +14,23 @@ func CreateResourceHandler(env *Env, w http.ResponseWriter, r *http.Request) err
 		return err
 	}
 
+	user, err := env.UserService.GetUser(userID)
+	if err != nil {
+		return err
+	}
+
+	resources, err := env.ResourceService.ListResources(userID)
+	if err != nil {
+		return err
+	}
+
+	if user.Quota >= 0 && user.Quota < len(resources)+1 {
+		return HandlerError{
+			StatusCode:  http.StatusForbidden,
+			ActualError: fmt.Errorf("resource quota exceeded"),
+		}
+	}
+
 	resource, err := env.ResourceService.CreateResource(userID)
 	if err != nil {
 		return err

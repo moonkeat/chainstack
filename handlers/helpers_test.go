@@ -13,9 +13,13 @@ import (
 )
 
 type fakeHandlerOptions struct {
-	userServiceReturnError     bool
-	tokenServiceReturnError    bool
-	resourceServiceReturnError bool
+	userServiceReturnError                   bool
+	userServiceQuota                         int
+	tokenServiceReturnError                  bool
+	resourceServiceCreateReturnError         bool
+	resourceServiceGetResourceError          bool
+	resourceServiceDeleteResourceReturnError bool
+	resourceServiceListResourcesReturnError  bool
 }
 
 func fakeHandler(opt *fakeHandlerOptions) http.Handler {
@@ -29,30 +33,69 @@ func fakeHandler(opt *fakeHandlerOptions) http.Handler {
 		tokenServiceReturnError = opt.tokenServiceReturnError
 	}
 
-	resourceServiceReturnError := false
-	if opt != nil && opt.resourceServiceReturnError {
-		resourceServiceReturnError = opt.resourceServiceReturnError
+	resourceServiceCreateReturnError := false
+	if opt != nil && opt.resourceServiceCreateReturnError {
+		resourceServiceCreateReturnError = opt.resourceServiceCreateReturnError
+	}
+
+	resourceServiceGetResourceError := false
+	if opt != nil && opt.resourceServiceGetResourceError {
+		resourceServiceGetResourceError = opt.resourceServiceGetResourceError
+	}
+
+	resourceServiceDeleteResourceReturnError := false
+	if opt != nil && opt.resourceServiceDeleteResourceReturnError {
+		resourceServiceDeleteResourceReturnError = opt.resourceServiceDeleteResourceReturnError
+	}
+
+	resourceServiceListResourcesReturnError := false
+	if opt != nil && opt.resourceServiceListResourcesReturnError {
+		resourceServiceListResourcesReturnError = opt.resourceServiceListResourcesReturnError
+	}
+
+	userServiceQuota := -1
+	if opt != nil && opt.userServiceQuota != 0 {
+		userServiceQuota = opt.userServiceQuota
 	}
 
 	return handlers.NewHandler(&handlers.Env{
-		Render:          render.New(),
-		UserService:     &fakeUserService{ReturnError: userServiceReturnError},
-		TokenService:    &fakeTokenService{ReturnError: tokenServiceReturnError},
-		ResourceService: &fakeResourceService{ReturnError: resourceServiceReturnError},
+		Render: render.New(),
+		UserService: &fakeUserService{
+			ReturnError: userServiceReturnError,
+			UserQuota:   userServiceQuota,
+		},
+		TokenService: &fakeTokenService{
+			ReturnError: tokenServiceReturnError,
+		},
+		ResourceService: &fakeResourceService{
+			CreateReturnError:         resourceServiceCreateReturnError,
+			GetResourceError:          resourceServiceGetResourceError,
+			DeleteResourceReturnError: resourceServiceDeleteResourceReturnError,
+			ListResourcesReturnError:  resourceServiceListResourcesReturnError,
+		},
 	})
 }
 
 type fakeUserService struct {
 	ReturnError bool
+	UserQuota   int
 }
 
 func (s fakeUserService) CreateUser(email string, password string, isAdmin bool) error {
 	return nil
 }
 
+func (s fakeUserService) GetUser(userID int) (*models.User, error) {
+	if s.ReturnError {
+		return nil, fmt.Errorf("user service error")
+	}
+
+	return &models.User{Quota: s.UserQuota}, nil
+}
+
 func (s fakeUserService) AuthenticateUser(email string, password string) (*models.User, error) {
 	if s.ReturnError {
-		return nil, fmt.Errorf("internal server error occurred")
+		return nil, fmt.Errorf("user service error")
 	}
 
 	if email == "correct@email.com" && password == "correctpassword" {
@@ -94,11 +137,14 @@ func (s fakeTokenService) AuthenticateToken(token string, path string) (*models.
 }
 
 type fakeResourceService struct {
-	ReturnError bool
+	CreateReturnError         bool
+	GetResourceError          bool
+	DeleteResourceReturnError bool
+	ListResourcesReturnError  bool
 }
 
 func (s fakeResourceService) CreateResource(userID int) (*models.Resource, error) {
-	if s.ReturnError {
+	if s.CreateReturnError {
 		return nil, fmt.Errorf("resource service error")
 	}
 
@@ -109,7 +155,7 @@ func (s fakeResourceService) CreateResource(userID int) (*models.Resource, error
 }
 
 func (s fakeResourceService) GetResource(userID int, key string) (*models.Resource, error) {
-	if s.ReturnError {
+	if s.GetResourceError {
 		return nil, fmt.Errorf("resource service error")
 	}
 
@@ -124,7 +170,7 @@ func (s fakeResourceService) GetResource(userID int, key string) (*models.Resour
 }
 
 func (s fakeResourceService) DeleteResource(userID int, key string) error {
-	if s.ReturnError {
+	if s.DeleteResourceReturnError {
 		return fmt.Errorf("resource service error")
 	}
 
@@ -136,7 +182,7 @@ func (s fakeResourceService) DeleteResource(userID int, key string) error {
 }
 
 func (s fakeResourceService) ListResources(userID int) ([]models.Resource, error) {
-	if s.ReturnError {
+	if s.ListResourcesReturnError {
 		return nil, fmt.Errorf("resource service error")
 	}
 

@@ -53,9 +53,9 @@ func TestCreateResourceHandler(t *testing.T) {
 			rr.Body.String(), expected)
 	}
 
-	// Should return 500 if resource service error
+	// Should return 500 if resource service list error
 	handler = fakeHandler(&fakeHandlerOptions{
-		resourceServiceReturnError: true,
+		resourceServiceListResourcesReturnError: true,
 	})
 	rr = httptest.NewRecorder()
 	req, err = http.NewRequest("POST", "/resources", nil)
@@ -70,6 +70,72 @@ func TestCreateResourceHandler(t *testing.T) {
 			status, http.StatusInternalServerError)
 	}
 	expected = `{"code":500,"message":"internal server error"}`
+	if rr.Body.String() != expected {
+		t.Errorf("handler returned unexpected body: got %v want %v",
+			rr.Body.String(), expected)
+	}
+
+	// Should return 500 if resource service create error
+	handler = fakeHandler(&fakeHandlerOptions{
+		resourceServiceCreateReturnError: true,
+	})
+	rr = httptest.NewRecorder()
+	req, err = http.NewRequest("POST", "/resources", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Authorization", "Bearer correcttoken")
+
+	handler.ServeHTTP(rr, req)
+	if status := rr.Code; status != http.StatusInternalServerError {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusInternalServerError)
+	}
+	expected = `{"code":500,"message":"internal server error"}`
+	if rr.Body.String() != expected {
+		t.Errorf("handler returned unexpected body: got %v want %v",
+			rr.Body.String(), expected)
+	}
+
+	// Should return 500 if user service error
+	handler = fakeHandler(&fakeHandlerOptions{
+		userServiceReturnError: true,
+	})
+	rr = httptest.NewRecorder()
+	req, err = http.NewRequest("POST", "/resources", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Authorization", "Bearer correcttoken")
+
+	handler.ServeHTTP(rr, req)
+	if status := rr.Code; status != http.StatusInternalServerError {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusInternalServerError)
+	}
+	expected = `{"code":500,"message":"internal server error"}`
+	if rr.Body.String() != expected {
+		t.Errorf("handler returned unexpected body: got %v want %v",
+			rr.Body.String(), expected)
+	}
+
+	// Should return 403 if user quota exceeded
+	handler = fakeHandler(&fakeHandlerOptions{
+		userServiceQuota: 1,
+	})
+	rr = httptest.NewRecorder()
+	req, err = http.NewRequest("POST", "/resources", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Authorization", "Bearer correcttoken")
+
+	handler.ServeHTTP(rr, req)
+	if status := rr.Code; status != http.StatusForbidden {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusForbidden)
+	}
+	expected = `{"code":403,"message":"resource quota exceeded"}`
 	if rr.Body.String() != expected {
 		t.Errorf("handler returned unexpected body: got %v want %v",
 			rr.Body.String(), expected)
@@ -142,7 +208,7 @@ func TestGetResourceHandler(t *testing.T) {
 
 	// Should return 500 if resource service error
 	handler = fakeHandler(&fakeHandlerOptions{
-		resourceServiceReturnError: true,
+		resourceServiceGetResourceError: true,
 	})
 	rr = httptest.NewRecorder()
 	req, err = http.NewRequest("GET", "/resources/resource1", nil)
@@ -249,7 +315,7 @@ func TestDeleteResourceHandler(t *testing.T) {
 
 	// Should return 500 if resource service error
 	handler = fakeHandler(&fakeHandlerOptions{
-		resourceServiceReturnError: true,
+		resourceServiceDeleteResourceReturnError: true,
 	})
 	rr = httptest.NewRecorder()
 	req, err = http.NewRequest("DELETE", "/resources/resource1", nil)
@@ -355,7 +421,7 @@ func TestListResourcesHandler(t *testing.T) {
 
 	// Should return 500 if resource service error
 	handler = fakeHandler(&fakeHandlerOptions{
-		resourceServiceReturnError: true,
+		resourceServiceListResourcesReturnError: true,
 	})
 	rr = httptest.NewRecorder()
 	req, err = http.NewRequest("GET", "/resources", nil)

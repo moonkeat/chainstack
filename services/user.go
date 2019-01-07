@@ -13,6 +13,7 @@ import (
 )
 
 type UserService interface {
+	GetUser(userID int) (*models.User, error)
 	CreateUser(email string, password string, isAdmin bool) error
 	AuthenticateUser(email string, password string) (*models.User, error)
 }
@@ -57,6 +58,16 @@ func (s userService) CreateUser(email string, password string, isAdmin bool) err
 	}
 
 	return nil
+}
+
+func (s userService) GetUser(userID int) (*models.User, error) {
+	user := models.User{}
+	err := s.DB.Get(&user, "SELECT id, email, password, admin, COALESCE(quota, -1) as quota FROM users WHERE id = $1", userID)
+	if err != nil && err != sql.ErrNoRows {
+		return nil, err
+	}
+
+	return &user, nil
 }
 
 func (s userService) AuthenticateUser(email string, password string) (*models.User, error) {
