@@ -8,20 +8,12 @@ import (
 	"testing"
 
 	"github.com/rs/zerolog"
-	"github.com/unrolled/render"
-
-	"github.com/moonkeat/chainstack/handlers"
 )
 
 func TestTokenHandler(t *testing.T) {
 	zerolog.SetGlobalLevel(zerolog.WarnLevel)
 
-	handler := handlers.NewHandler(&handlers.Env{
-		Render:          render.New(),
-		UserService:     &fakeUserService{},
-		TokenService:    &fakeTokenService{},
-		ResourceService: &fakeResourceService{},
-	})
+	handler := fakeHandler(nil)
 
 	// Should return 400 if no request body
 	rr := httptest.NewRecorder()
@@ -193,10 +185,8 @@ func TestTokenHandler(t *testing.T) {
 			rr.Body.String(), expected)
 	}
 
-	handler = handlers.NewHandler(&handlers.Env{
-		Render:       render.New(),
-		UserService:  &fakeUserService{},
-		TokenService: &fakeTokenService{ReturnError: true},
+	handler = fakeHandler(&fakeHandlerOptions{
+		tokenServiceReturnError: true,
 	})
 
 	// Should return 500 if failed to create token

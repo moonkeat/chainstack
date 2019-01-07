@@ -2,11 +2,38 @@ package handlers_test
 
 import (
 	"fmt"
+	"net/http"
 	"time"
 
+	"github.com/moonkeat/chainstack/handlers"
 	"github.com/moonkeat/chainstack/models"
 	"github.com/moonkeat/chainstack/services"
+	"github.com/unrolled/render"
 )
+
+type fakeHandlerOptions struct {
+	tokenServiceReturnError    bool
+	resourceServiceReturnError bool
+}
+
+func fakeHandler(opt *fakeHandlerOptions) http.Handler {
+	tokenServiceReturnError := false
+	if opt != nil && opt.tokenServiceReturnError {
+		tokenServiceReturnError = opt.tokenServiceReturnError
+	}
+
+	resourceServiceReturnError := false
+	if opt != nil && opt.resourceServiceReturnError {
+		resourceServiceReturnError = opt.resourceServiceReturnError
+	}
+
+	return handlers.NewHandler(&handlers.Env{
+		Render:          render.New(),
+		UserService:     &fakeUserService{},
+		TokenService:    &fakeTokenService{ReturnError: tokenServiceReturnError},
+		ResourceService: &fakeResourceService{ReturnError: resourceServiceReturnError},
+	})
+}
 
 type fakeUserService struct{}
 
@@ -36,7 +63,7 @@ type fakeTokenService struct {
 
 func (s fakeTokenService) CreateToken(expiresIn time.Duration, scope []string, userID int) (string, error) {
 	if s.ReturnError {
-		return "", fmt.Errorf("some error here")
+		return "", fmt.Errorf("token service error")
 	}
 	return "fakeToken", nil
 }
@@ -50,10 +77,6 @@ func (s fakeTokenService) AuthenticateToken(token string, path string) (*models.
 		return &models.Token{UserID: -1}, nil
 	}
 
-	if token == "tokenserviceerror" {
-		return &models.Token{UserID: 2}, nil
-	}
-
 	if token == "correcttoken" {
 		return &models.Token{UserID: 1}, nil
 	}
@@ -61,9 +84,26 @@ func (s fakeTokenService) AuthenticateToken(token string, path string) (*models.
 	return nil, services.TokenAuthenticationError{}
 }
 
-type fakeResourceService struct{}
+type fakeResourceService struct {
+	ReturnError bool
+}
+
+func (s fakeResourceService) CreateResource(userID int) (*models.Resource, error) {
+	if s.ReturnError {
+		return nil, fmt.Errorf("resource service error")
+	}
+
+	return &models.Resource{
+		Key:       "resource1",
+		CreatedAt: time.Now().Truncate(24 * time.Hour),
+	}, nil
+}
 
 func (s fakeResourceService) ListResources(userID int) ([]models.Resource, error) {
+	if s.ReturnError {
+		return nil, fmt.Errorf("resource service error")
+	}
+
 	if userID == 1 {
 		return []models.Resource{
 			{
@@ -71,10 +111,6 @@ func (s fakeResourceService) ListResources(userID int) ([]models.Resource, error
 				CreatedAt: time.Now().Truncate(24 * time.Hour),
 			},
 		}, nil
-	}
-
-	if userID == 2 {
-		return nil, fmt.Errorf("token service error")
 	}
 
 	return nil, nil
