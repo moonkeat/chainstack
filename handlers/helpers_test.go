@@ -123,6 +123,18 @@ func (s fakeResourceService) GetResource(userID int, key string) (*models.Resour
 	return nil, sql.ErrNoRows
 }
 
+func (s fakeResourceService) DeleteResource(userID int, key string) error {
+	if s.ReturnError {
+		return fmt.Errorf("resource service error")
+	}
+
+	if key == "resource1" {
+		return nil
+	}
+
+	return sql.ErrNoRows
+}
+
 func (s fakeResourceService) ListResources(userID int) ([]models.Resource, error) {
 	if s.ReturnError {
 		return nil, fmt.Errorf("resource service error")

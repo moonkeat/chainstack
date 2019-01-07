@@ -13,6 +13,7 @@ import (
 type ResourceService interface {
 	CreateResource(userID int) (*models.Resource, error)
 	GetResource(userID int, key string) (*models.Resource, error)
+	DeleteResource(userID int, key string) error
 	ListResources(userID int) ([]models.Resource, error)
 }
 
@@ -39,6 +40,21 @@ func (s resourceService) GetResource(userID int, key string) (*models.Resource, 
 	}
 
 	return &resource, nil
+}
+
+func (s resourceService) DeleteResource(userID int, key string) error {
+	resource := models.Resource{}
+	err := s.DB.Get(&resource, "SELECT id FROM resources WHERE key = $1 AND user_id = $2", key, userID)
+	if err != nil {
+		return err
+	}
+
+	_, err = s.DB.Query("DELETE FROM resources WHERE id = $1", resource.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (s resourceService) ListResources(userID int) ([]models.Resource, error) {
