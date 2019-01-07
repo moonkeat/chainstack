@@ -14,9 +14,10 @@ import (
 )
 
 type Env struct {
-	Render       *render.Render
-	UserService  services.UserService
-	TokenService services.TokenService
+	Render          *render.Render
+	UserService     services.UserService
+	TokenService    services.TokenService
+	ResourceService services.ResourceService
 }
 
 type Handler struct {

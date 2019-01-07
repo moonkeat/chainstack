@@ -17,9 +17,10 @@ func TestTokenHandler(t *testing.T) {
 	zerolog.SetGlobalLevel(zerolog.WarnLevel)
 
 	handler := handlers.NewHandler(&handlers.Env{
-		Render:       render.New(),
-		UserService:  &fakeUserService{},
-		TokenService: &fakeTokenService{},
+		Render:          render.New(),
+		UserService:     &fakeUserService{},
+		TokenService:    &fakeTokenService{},
+		ResourceService: &fakeResourceService{},
 	})
 
 	// Should return 400 if no request body

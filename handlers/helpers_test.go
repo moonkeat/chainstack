@@ -45,10 +45,37 @@ func (s fakeTokenService) CleanExpiredTokens() error {
 	return nil
 }
 
-func (s fakeTokenService) AuthenticateToken(token string, path string) error {
-	if token == "correcttoken" {
-		return nil
+func (s fakeTokenService) AuthenticateToken(token string, path string) (*models.Token, error) {
+	if token == "tokenwithinvaliduserid" {
+		return &models.Token{UserID: -1}, nil
 	}
 
-	return services.TokenAuthenticationError{}
+	if token == "tokenserviceerror" {
+		return &models.Token{UserID: 2}, nil
+	}
+
+	if token == "correcttoken" {
+		return &models.Token{UserID: 1}, nil
+	}
+
+	return nil, services.TokenAuthenticationError{}
+}
+
+type fakeResourceService struct{}
+
+func (s fakeResourceService) ListResources(userID int) ([]models.Resource, error) {
+	if userID == 1 {
+		return []models.Resource{
+			{
+				Key:       "resource1",
+				CreatedAt: time.Now().Truncate(24 * time.Hour),
+			},
+		}, nil
+	}
+
+	if userID == 2 {
+		return nil, fmt.Errorf("token service error")
+	}
+
+	return nil, nil
 }

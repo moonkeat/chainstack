@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"net/http"
 	"strings"
 
@@ -11,7 +12,7 @@ func AuthMiddleware(env *Env, path string) func(next http.Handler) http.Handler 
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			accessToken := strings.TrimSpace(strings.Replace(r.Header.Get("Authorization"), "Bearer ", "", -1))
-			err := env.TokenService.AuthenticateToken(accessToken, path)
+			token, err := env.TokenService.AuthenticateToken(accessToken, path)
 			if err != nil {
 				env.Render.JSON(w, http.StatusUnauthorized, responses.Error{
 					Code:    http.StatusUnauthorized,
@@ -20,7 +21,9 @@ func AuthMiddleware(env *Env, path string) func(next http.Handler) http.Handler 
 				return
 			}
 
-			next.ServeHTTP(w, r)
+			ctx := context.WithValue(r.Context(), "user_id", token.UserID)
+
+			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
 }

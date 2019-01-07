@@ -14,7 +14,7 @@ import (
 type TokenService interface {
 	CreateToken(expiresIn time.Duration, scope []string, userID int) (string, error)
 	CleanExpiredTokens() error
-	AuthenticateToken(token string, path string) error
+	AuthenticateToken(token string, path string) (*models.Token, error)
 }
 
 type TokenAuthenticationError struct{}
@@ -37,18 +37,18 @@ func (s tokenService) CreateToken(expiresIn time.Duration, scope []string, userI
 	return token.String(), nil
 }
 
-func (s tokenService) AuthenticateToken(tokenString string, path string) error {
+func (s tokenService) AuthenticateToken(tokenString string, path string) (*models.Token, error) {
 	token := models.Token{}
 	err := s.DB.Get(&token, "SELECT token, expires, scope, user_id FROM access_tokens WHERE token = $1 AND expires > NOW()", tokenString)
 	if err != nil && err != sql.ErrNoRows {
-		return err
+		return nil, err
 	}
 
 	if !strings.Contains(token.Scope, path) {
-		return TokenAuthenticationError{}
+		return nil, TokenAuthenticationError{}
 	}
 
-	return nil
+	return &token, nil
 }
 
 func (s tokenService) CleanExpiredTokens() error {
