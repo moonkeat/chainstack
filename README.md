@@ -2,8 +2,7 @@
 
 You need authenticate using OAuth 2.0 and the Client Credentials grant to access the API.
 
-Authentication flow
--------------------
+#### Authentication flow
 
 1) `POST /token` with your credentials to obtain `access token`.
 2) Set HTTP header `Authorization` with value `Bearer <access token>`.
@@ -16,6 +15,7 @@ POST /token
 ```
 
 POST Form fields
+
 | Field         | Description                                |
 |---------------|--------------------------------------------|
 | client_id     | (required) user email                      |
