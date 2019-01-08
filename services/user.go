@@ -81,7 +81,7 @@ func (s userService) UpdateUserQuota(userID int, quota *int) (*models.User, erro
 
 func (s userService) DeleteUser(userID int) error {
 	user := models.User{}
-	err := s.DB.Get(&user, "SELECT id FROM users WHERE user_id = $1", userID)
+	err := s.DB.Get(&user, "SELECT id FROM users WHERE id = $1", userID)
 	if err != nil {
 		return err
 	}
