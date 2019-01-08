@@ -15,7 +15,7 @@ func CreateResourceHandler(env *Env, w http.ResponseWriter, r *http.Request) err
 	}
 
 	user, err := env.UserService.GetUser(userID)
-	if err != nil {
+	if err != nil && err != sql.ErrNoRows {
 		return err
 	}
 
@@ -24,7 +24,7 @@ func CreateResourceHandler(env *Env, w http.ResponseWriter, r *http.Request) err
 		return err
 	}
 
-	if user.Quota >= 0 && user.Quota < len(resources)+1 {
+	if user.Quota != nil && *user.Quota < len(resources)+1 && *user.Quota != -1 {
 		return HandlerError{
 			StatusCode:  http.StatusForbidden,
 			ActualError: fmt.Errorf("resource quota exceeded"),

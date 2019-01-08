@@ -14,7 +14,7 @@ import (
 
 type fakeHandlerOptions struct {
 	userServiceReturnError                   bool
-	userServiceQuota                         int
+	userServiceQuota                         *int
 	tokenServiceReturnError                  bool
 	resourceServiceCreateReturnError         bool
 	resourceServiceGetResourceError          bool
@@ -54,8 +54,8 @@ func fakeHandler(opt *fakeHandlerOptions) http.Handler {
 	}
 
 	userServiceQuota := -1
-	if opt != nil && opt.userServiceQuota != 0 {
-		userServiceQuota = opt.userServiceQuota
+	if opt != nil && opt.userServiceQuota != nil {
+		userServiceQuota = *opt.userServiceQuota
 	}
 
 	return handlers.NewHandler(&handlers.Env{
@@ -81,8 +81,8 @@ type fakeUserService struct {
 	UserQuota   int
 }
 
-func (s fakeUserService) CreateUser(email string, password string, isAdmin bool) error {
-	return nil
+func (s fakeUserService) CreateUser(email string, password string, isAdmin bool, quota *int) (*models.User, error) {
+	return nil, nil
 }
 
 func (s fakeUserService) GetUser(userID int) (*models.User, error) {
@@ -90,7 +90,43 @@ func (s fakeUserService) GetUser(userID int) (*models.User, error) {
 		return nil, fmt.Errorf("user service error")
 	}
 
-	return &models.User{Quota: s.UserQuota}, nil
+	if userID != 1 {
+		return nil, sql.ErrNoRows
+	}
+
+	return &models.User{
+		ID:    1,
+		Email: "test@test.com",
+		Admin: false,
+		Quota: &s.UserQuota,
+	}, nil
+}
+
+func (s fakeUserService) DeleteUser(userID int) error {
+	if s.ReturnError {
+		return fmt.Errorf("user service error")
+	}
+
+	if userID == 1 {
+		return nil
+	}
+
+	return sql.ErrNoRows
+}
+
+func (s fakeUserService) ListUsers() ([]models.User, error) {
+	if s.ReturnError {
+		return nil, fmt.Errorf("user service error")
+	}
+
+	return []models.User{
+		{
+			ID:    1,
+			Email: "test@test.com",
+			Admin: false,
+			Quota: &s.UserQuota,
+		},
+	}, nil
 }
 
 func (s fakeUserService) AuthenticateUser(email string, password string) (*models.User, error) {

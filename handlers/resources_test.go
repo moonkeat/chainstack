@@ -120,8 +120,9 @@ func TestCreateResourceHandler(t *testing.T) {
 	}
 
 	// Should return 403 if user quota exceeded
+	quota := 1
 	handler = fakeHandler(&fakeHandlerOptions{
-		userServiceQuota: 1,
+		userServiceQuota: &quota,
 	})
 	rr = httptest.NewRecorder()
 	req, err = http.NewRequest("POST", "/resources", nil)

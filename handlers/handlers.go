@@ -78,5 +78,10 @@ func NewHandler(env *Env) http.Handler {
 	r.Handle("/resources/{key}", chain.Then(Handler{Env: env, H: DeleteResourceHandler})).Methods("DELETE")
 	r.Handle("/resources", chain.Then(Handler{Env: env, H: CreateResourceHandler})).Methods("POST")
 
+	chain = alice.New(AuthMiddleware(env, "users"))
+	r.Handle("/users", chain.Then(Handler{Env: env, H: ListUsersHandler})).Methods("GET")
+	r.Handle("/users/{user_id}", chain.Then(Handler{Env: env, H: GetUserHandler})).Methods("GET")
+	r.Handle("/users/{user_id}", chain.Then(Handler{Env: env, H: DeleteUserHandler})).Methods("DELETE")
+
 	return r
 }

@@ -24,7 +24,7 @@ type resourceService struct {
 func (s resourceService) CreateResource(userID int) (*models.Resource, error) {
 	key := uuid.NewV4()
 	createdAt := time.Now().UTC()
-	_, err := s.DB.Query("INSERT INTO resources (key, created_at, user_id) VALUES ($1, $2, $3)", key.String(), createdAt, userID)
+	_, err := s.DB.Exec("INSERT INTO resources (key, created_at, user_id) VALUES ($1, $2, $3)", key.String(), createdAt, userID)
 	if err != nil {
 		return nil, err
 	}
