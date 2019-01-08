@@ -116,6 +116,19 @@ func (s fakeUserService) GetUser(userID int) (*models.User, error) {
 	}, nil
 }
 
+func (s fakeUserService) UpdateUserQuota(userID int, quota *int) (*models.User, error) {
+	if s.ReturnError {
+		return nil, fmt.Errorf("user service error")
+	}
+
+	return &models.User{
+		ID:    userID,
+		Email: "test@test.com",
+		Admin: false,
+		Quota: quota,
+	}, nil
+}
+
 func (s fakeUserService) DeleteUser(userID int) error {
 	if s.ReturnError {
 		return fmt.Errorf("user service error")

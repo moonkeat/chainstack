@@ -14,6 +14,7 @@ import (
 type UserService interface {
 	CreateUser(email string, password string, isAdmin bool, quota *int) (*models.User, error)
 	GetUser(userID int) (*models.User, error)
+	UpdateUserQuota(userID int, quota *int) (*models.User, error)
 	DeleteUser(userID int) error
 	ListUsers() ([]models.User, error)
 	AuthenticateUser(email string, password string) (*models.User, error)
@@ -62,6 +63,20 @@ func (s userService) GetUser(userID int) (*models.User, error) {
 	}
 
 	return &user, nil
+}
+
+func (s userService) UpdateUserQuota(userID int, quota *int) (*models.User, error) {
+	_, err := s.DB.Exec("UPDATE users SET quota = $1 WHERE id = $2", quota, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	user, err := s.GetUser(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
 }
 
 func (s userService) DeleteUser(userID int) error {

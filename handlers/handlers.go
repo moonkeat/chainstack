@@ -83,6 +83,7 @@ func NewHandler(env *Env) http.Handler {
 	r.Handle("/users/{user_id}", chain.Then(Handler{Env: env, H: GetUserHandler})).Methods("GET")
 	r.Handle("/users/{user_id}", chain.Then(Handler{Env: env, H: DeleteUserHandler})).Methods("DELETE")
 	r.Handle("/users", chain.Then(Handler{Env: env, H: CreateUserHandler})).Methods("POST")
+	r.Handle("/users/{user_id}/quota", chain.Then(Handler{Env: env, H: UpdateUserQuotaHandler})).Methods("PUT")
 
 	return r
 }
