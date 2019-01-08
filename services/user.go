@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/asaskevich/govalidator"
 	"github.com/jmoiron/sqlx"
 	"golang.org/x/crypto/bcrypt"
 
@@ -20,33 +19,15 @@ type UserService interface {
 	AuthenticateUser(email string, password string) (*models.User, error)
 }
 
-type UserValidationError struct {
-	Field  string
-	Reason string
-}
-
-func (e UserValidationError) Error() string {
-	return fmt.Sprintf("invalid %s: %s", e.Field, e.Reason)
-}
-
 type userService struct {
 	DB *sqlx.DB
 }
 
 func (s userService) CreateUser(email string, password string, isAdmin bool, quota *int) (*models.User, error) {
 	email = strings.TrimSpace(email)
-	if !govalidator.IsEmail(email) {
-		return nil, UserValidationError{
-			Field:  "email",
-			Reason: fmt.Sprintf("'%s' is not a valid email", email),
-		}
-	}
-
-	if len(password) < 8 {
-		return nil, UserValidationError{
-			Field:  "password",
-			Reason: fmt.Sprintf("password should be at least 8 characters"),
-		}
+	err := models.ValidateUser(email, password)
+	if err != nil {
+		return nil, err
 	}
 
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
@@ -56,6 +37,12 @@ func (s userService) CreateUser(email string, password string, isAdmin bool, quo
 
 	_, err = s.DB.Exec("INSERT INTO users (email, password, admin, quota) VALUES (lower($1), $2, $3, $4)", email, passwordHash, isAdmin, quota)
 	if err != nil {
+		if strings.Contains(err.Error(), "users_unique_lower_email_idx") {
+			return nil, models.UserValidationError{
+				Field:  "email",
+				Reason: fmt.Sprintf("user with email already exists"),
+			}
+		}
 		return nil, err
 	}
 
@@ -112,6 +99,8 @@ func (s userService) AuthenticateUser(email string, password string) (*models.Us
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
 		return nil, nil
 	}
+
+	user.Password = ""
 
 	return &user, nil
 }

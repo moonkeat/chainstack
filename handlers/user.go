@@ -2,12 +2,50 @@ package handlers
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/gorilla/mux"
+
+	"github.com/moonkeat/chainstack/models"
 )
+
+func CreateUserHandler(env *Env, w http.ResponseWriter, r *http.Request) error {
+	if r.Body == nil {
+		return HandlerError{
+			StatusCode:  400,
+			ActualError: fmt.Errorf("request body is nil"),
+		}
+	}
+
+	var user models.User
+	err := json.NewDecoder(r.Body).Decode(&user)
+	if err != nil {
+		return HandlerError{
+			StatusCode:  400,
+			ActualError: fmt.Errorf("failed to parse request body as json"),
+		}
+	}
+	defer r.Body.Close()
+
+	userData, err := env.UserService.CreateUser(user.Email, user.Password, user.Admin, user.Quota)
+	if err != nil {
+		switch err.(type) {
+		case models.UserValidationError:
+			return HandlerError{
+				StatusCode:  http.StatusBadRequest,
+				ActualError: err,
+			}
+		default:
+			return err
+		}
+	}
+
+	env.Render.JSON(w, http.StatusCreated, userData)
+	return nil
+}
 
 func ListUsersHandler(env *Env, w http.ResponseWriter, r *http.Request) error {
 	users, err := env.UserService.ListUsers()

@@ -29,7 +29,7 @@ type tokenService struct {
 
 func (s tokenService) CreateToken(expiresIn time.Duration, scope []string, userID int) (string, error) {
 	token := uuid.NewV4()
-	_, err := s.DB.Exec("INSERT INTO access_tokens (token, expires, scope, user_id) VALUES ($1, $2, $3, $4)", token.String(), time.Now().Add(expiresIn), strings.Join(scope, " "), userID)
+	_, err := s.DB.Exec("INSERT INTO access_tokens (token, expires, scope, user_id) VALUES ($1, $2, $3, $4)", token.String(), time.Now().UTC().Add(expiresIn), strings.Join(scope, " "), userID)
 	if err != nil {
 		return "", err
 	}

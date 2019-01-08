@@ -82,7 +82,21 @@ type fakeUserService struct {
 }
 
 func (s fakeUserService) CreateUser(email string, password string, isAdmin bool, quota *int) (*models.User, error) {
-	return nil, nil
+	if s.ReturnError {
+		return nil, fmt.Errorf("user service error")
+	}
+
+	err := models.ValidateUser(email, password)
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.User{
+		ID:    1,
+		Email: email,
+		Admin: isAdmin,
+		Quota: quota,
+	}, nil
 }
 
 func (s fakeUserService) GetUser(userID int) (*models.User, error) {

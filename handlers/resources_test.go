@@ -142,7 +142,7 @@ func TestCreateResourceHandler(t *testing.T) {
 			rr.Body.String(), expected)
 	}
 
-	// Should return 200 with all resources belong to the user
+	// Should return 200 with the created resource
 	handler = fakeHandler(nil)
 	rr = httptest.NewRecorder()
 	req, err = http.NewRequest("POST", "/resources", nil)
@@ -249,7 +249,7 @@ func TestGetResourceHandler(t *testing.T) {
 			rr.Body.String(), expected)
 	}
 
-	// Should return 200 with all resources belong to the user
+	// Should return 200 with the requested resource
 	handler = fakeHandler(nil)
 	rr = httptest.NewRecorder()
 	req, err = http.NewRequest("GET", "/resources/resource1", nil)
@@ -356,7 +356,7 @@ func TestDeleteResourceHandler(t *testing.T) {
 			rr.Body.String(), expected)
 	}
 
-	// Should return 200 with all resources belong to the user
+	// Should return 204 with no content
 	handler = fakeHandler(nil)
 	rr = httptest.NewRecorder()
 	req, err = http.NewRequest("DELETE", "/resources/resource1", nil)
