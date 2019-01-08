@@ -39,7 +39,7 @@ func TestCreateUserHandler(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	req.Header.Set("Authorization", "Bearer tokenwithinvaliduserid")
+	req.Header.Set("Authorization", "Bearer correcttoken")
 
 	handler.ServeHTTP(rr, req)
 	if status := rr.Code; status != http.StatusBadRequest {
@@ -58,7 +58,7 @@ func TestCreateUserHandler(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	req.Header.Set("Authorization", "Bearer tokenwithinvaliduserid")
+	req.Header.Set("Authorization", "Bearer correcttoken")
 
 	handler.ServeHTTP(rr, req)
 	if status := rr.Code; status != http.StatusBadRequest {
@@ -361,6 +361,26 @@ func TestDeleteUserHandler(t *testing.T) {
 			rr.Body.String(), expected)
 	}
 
+	// Should return 404 if user id invalid
+	handler = fakeHandler(&fakeHandlerOptions{})
+	rr = httptest.NewRecorder()
+	req, err = http.NewRequest("DELETE", "/users/invalid", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Authorization", "Bearer correcttoken")
+
+	handler.ServeHTTP(rr, req)
+	if status := rr.Code; status != http.StatusNotFound {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusNotFound)
+	}
+	expected = `{"code":404,"message":"user not found"}`
+	if rr.Body.String() != expected {
+		t.Errorf("handler returned unexpected body: got %v want %v",
+			rr.Body.String(), expected)
+	}
+
 	// Should return 404 if user not found
 	handler = fakeHandler(&fakeHandlerOptions{})
 	rr = httptest.NewRecorder()
@@ -530,6 +550,46 @@ func TestUpdateUserQuotaHandler(t *testing.T) {
 			status, http.StatusBadRequest)
 	}
 	expected = `{"code":400,"message":"failed to parse request body as json, err: EOF"}`
+	if rr.Body.String() != expected {
+		t.Errorf("handler returned unexpected body: got %v want %v",
+			rr.Body.String(), expected)
+	}
+
+	// Should return 404 if user id invalid
+	handler = fakeHandler(&fakeHandlerOptions{})
+	rr = httptest.NewRecorder()
+	req, err = http.NewRequest("PUT", "/users/invalid/quota", strings.NewReader("{}"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Authorization", "Bearer correcttoken")
+
+	handler.ServeHTTP(rr, req)
+	if status := rr.Code; status != http.StatusNotFound {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusNotFound)
+	}
+	expected = `{"code":404,"message":"user not found"}`
+	if rr.Body.String() != expected {
+		t.Errorf("handler returned unexpected body: got %v want %v",
+			rr.Body.String(), expected)
+	}
+
+	// Should return 404 if user not found
+	handler = fakeHandler(&fakeHandlerOptions{})
+	rr = httptest.NewRecorder()
+	req, err = http.NewRequest("PUT", "/users/2/quota", strings.NewReader("{}"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Authorization", "Bearer correcttoken")
+
+	handler.ServeHTTP(rr, req)
+	if status := rr.Code; status != http.StatusNotFound {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusNotFound)
+	}
+	expected = `{"code":404,"message":"user not found"}`
 	if rr.Body.String() != expected {
 		t.Errorf("handler returned unexpected body: got %v want %v",
 			rr.Body.String(), expected)

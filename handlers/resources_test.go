@@ -34,25 +34,6 @@ func TestCreateResourceHandler(t *testing.T) {
 			rr.Body.String(), expected)
 	}
 
-	// Should return 500 if token associate with invalid user id
-	rr = httptest.NewRecorder()
-	req, err = http.NewRequest("POST", "/resources", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	req.Header.Set("Authorization", "Bearer tokenwithinvaliduserid")
-
-	handler.ServeHTTP(rr, req)
-	if status := rr.Code; status != http.StatusInternalServerError {
-		t.Errorf("handler returned wrong status code: got %v want %v",
-			status, http.StatusInternalServerError)
-	}
-	expected = `{"code":500,"message":"internal server error"}`
-	if rr.Body.String() != expected {
-		t.Errorf("handler returned unexpected body: got %v want %v",
-			rr.Body.String(), expected)
-	}
-
 	// Should return 500 if resource service list error
 	handler = fakeHandler(&fakeHandlerOptions{
 		resourceServiceListResourcesReturnError: true,
@@ -188,25 +169,6 @@ func TestGetResourceHandler(t *testing.T) {
 			rr.Body.String(), expected)
 	}
 
-	// Should return 500 if token associate with invalid user id
-	rr = httptest.NewRecorder()
-	req, err = http.NewRequest("GET", "/resources/resource1", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	req.Header.Set("Authorization", "Bearer tokenwithinvaliduserid")
-
-	handler.ServeHTTP(rr, req)
-	if status := rr.Code; status != http.StatusInternalServerError {
-		t.Errorf("handler returned wrong status code: got %v want %v",
-			status, http.StatusInternalServerError)
-	}
-	expected = `{"code":500,"message":"internal server error"}`
-	if rr.Body.String() != expected {
-		t.Errorf("handler returned unexpected body: got %v want %v",
-			rr.Body.String(), expected)
-	}
-
 	// Should return 500 if resource service error
 	handler = fakeHandler(&fakeHandlerOptions{
 		resourceServiceGetResourceError: true,
@@ -295,25 +257,6 @@ func TestDeleteResourceHandler(t *testing.T) {
 			rr.Body.String(), expected)
 	}
 
-	// Should return 500 if token associate with invalid user id
-	rr = httptest.NewRecorder()
-	req, err = http.NewRequest("DELETE", "/resources/resource1", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	req.Header.Set("Authorization", "Bearer tokenwithinvaliduserid")
-
-	handler.ServeHTTP(rr, req)
-	if status := rr.Code; status != http.StatusInternalServerError {
-		t.Errorf("handler returned wrong status code: got %v want %v",
-			status, http.StatusInternalServerError)
-	}
-	expected = `{"code":500,"message":"internal server error"}`
-	if rr.Body.String() != expected {
-		t.Errorf("handler returned unexpected body: got %v want %v",
-			rr.Body.String(), expected)
-	}
-
 	// Should return 500 if resource service error
 	handler = fakeHandler(&fakeHandlerOptions{
 		resourceServiceDeleteResourceReturnError: true,
@@ -396,25 +339,6 @@ func TestListResourcesHandler(t *testing.T) {
 			status, http.StatusUnauthorized)
 	}
 	expected := `{"code":401,"message":"access denied"}`
-	if rr.Body.String() != expected {
-		t.Errorf("handler returned unexpected body: got %v want %v",
-			rr.Body.String(), expected)
-	}
-
-	// Should return 500 if token associate with invalid user id
-	rr = httptest.NewRecorder()
-	req, err = http.NewRequest("GET", "/resources", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	req.Header.Set("Authorization", "Bearer tokenwithinvaliduserid")
-
-	handler.ServeHTTP(rr, req)
-	if status := rr.Code; status != http.StatusInternalServerError {
-		t.Errorf("handler returned wrong status code: got %v want %v",
-			status, http.StatusInternalServerError)
-	}
-	expected = `{"code":500,"message":"internal server error"}`
 	if rr.Body.String() != expected {
 		t.Errorf("handler returned unexpected body: got %v want %v",
 			rr.Body.String(), expected)

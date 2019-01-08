@@ -58,8 +58,15 @@ func ListUsersHandler(env *Env, w http.ResponseWriter, r *http.Request) error {
 }
 
 func GetUserHandler(env *Env, w http.ResponseWriter, r *http.Request) error {
-	userID := getUserIDFromRequest(r)
-	user, err := env.UserService.GetUser(userID)
+	userID, err := getUserIDFromRequest(r)
+	if err != nil {
+		return HandlerError{
+			StatusCode:  http.StatusNotFound,
+			ActualError: fmt.Errorf("user not found"),
+		}
+	}
+
+	user, err := env.UserService.GetUser(*userID)
 	if err != nil && err != sql.ErrNoRows {
 		return err
 	}
@@ -92,10 +99,23 @@ func UpdateUserQuotaHandler(env *Env, w http.ResponseWriter, r *http.Request) er
 	}
 	defer r.Body.Close()
 
-	userID := getUserIDFromRequest(r)
-	userData, err := env.UserService.UpdateUserQuota(userID, user.Quota)
+	userID, err := getUserIDFromRequest(r)
 	if err != nil {
+		return HandlerError{
+			StatusCode:  http.StatusNotFound,
+			ActualError: fmt.Errorf("user not found"),
+		}
+	}
+
+	userData, err := env.UserService.UpdateUserQuota(*userID, user.Quota)
+	if err != nil && err != sql.ErrNoRows {
 		return err
+	}
+	if err == sql.ErrNoRows {
+		return HandlerError{
+			StatusCode:  http.StatusNotFound,
+			ActualError: fmt.Errorf("user not found"),
+		}
 	}
 
 	env.Render.JSON(w, http.StatusOK, userData)
@@ -103,8 +123,15 @@ func UpdateUserQuotaHandler(env *Env, w http.ResponseWriter, r *http.Request) er
 }
 
 func DeleteUserHandler(env *Env, w http.ResponseWriter, r *http.Request) error {
-	userID := getUserIDFromRequest(r)
-	err := env.UserService.DeleteUser(userID)
+	userID, err := getUserIDFromRequest(r)
+	if err != nil {
+		return HandlerError{
+			StatusCode:  http.StatusNotFound,
+			ActualError: fmt.Errorf("user not found"),
+		}
+	}
+
+	err = env.UserService.DeleteUser(*userID)
 	if err != nil && err != sql.ErrNoRows {
 		return err
 	}
@@ -119,14 +146,25 @@ func DeleteUserHandler(env *Env, w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func getUserIDFromRequest(r *http.Request) int {
+var ErrInvalidUserID = fmt.Errorf("failed to parse user id from request")
+
+func getUserIDFromRequest(r *http.Request) (*int, error) {
 	vars := mux.Vars(r)
 	userIDStr := vars["user_id"]
-	userID := -1
-	parsedUserID, err := strconv.ParseInt(userIDStr, 10, 64)
-	if err == nil {
-		userID = int(parsedUserID)
+	if userIDStr != "" {
+		parsedUserID, err := strconv.ParseInt(userIDStr, 10, 64)
+		if err != nil {
+			return nil, ErrInvalidUserID
+		}
+
+		userID := int(parsedUserID)
+		return &userID, nil
 	}
 
-	return userID
+	userIDFromCtx, ok := r.Context().Value("auth_user_id").(int)
+	if ok {
+		return &userIDFromCtx, nil
+	}
+
+	return nil, ErrInvalidUserID
 }

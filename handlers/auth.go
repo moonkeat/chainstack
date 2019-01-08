@@ -21,7 +21,7 @@ func AuthMiddleware(env *Env, path string) func(next http.Handler) http.Handler 
 				return
 			}
 
-			ctx := context.WithValue(r.Context(), "user_id", token.UserID)
+			ctx := context.WithValue(r.Context(), "auth_user_id", token.UserID)
 
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})

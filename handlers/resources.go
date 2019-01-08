@@ -9,17 +9,17 @@ import (
 )
 
 func CreateResourceHandler(env *Env, w http.ResponseWriter, r *http.Request) error {
-	userID, err := getUserIDFromContext(r)
+	userID, err := getUserIDFromRequest(r)
 	if err != nil {
 		return err
 	}
 
-	user, err := env.UserService.GetUser(userID)
+	user, err := env.UserService.GetUser(*userID)
 	if err != nil && err != sql.ErrNoRows {
 		return err
 	}
 
-	resources, err := env.ResourceService.ListResources(userID)
+	resources, err := env.ResourceService.ListResources(*userID)
 	if err != nil {
 		return err
 	}
@@ -31,7 +31,7 @@ func CreateResourceHandler(env *Env, w http.ResponseWriter, r *http.Request) err
 		}
 	}
 
-	resource, err := env.ResourceService.CreateResource(userID)
+	resource, err := env.ResourceService.CreateResource(*userID)
 	if err != nil {
 		return err
 	}
@@ -41,7 +41,7 @@ func CreateResourceHandler(env *Env, w http.ResponseWriter, r *http.Request) err
 }
 
 func GetResourceHandler(env *Env, w http.ResponseWriter, r *http.Request) error {
-	userID, err := getUserIDFromContext(r)
+	userID, err := getUserIDFromRequest(r)
 	if err != nil {
 		return err
 	}
@@ -49,7 +49,7 @@ func GetResourceHandler(env *Env, w http.ResponseWriter, r *http.Request) error 
 	vars := mux.Vars(r)
 	key := vars["key"]
 
-	resource, err := env.ResourceService.GetResource(userID, key)
+	resource, err := env.ResourceService.GetResource(*userID, key)
 	if err != nil && err != sql.ErrNoRows {
 		return err
 	}
@@ -64,7 +64,7 @@ func GetResourceHandler(env *Env, w http.ResponseWriter, r *http.Request) error 
 	return nil
 }
 func DeleteResourceHandler(env *Env, w http.ResponseWriter, r *http.Request) error {
-	userID, err := getUserIDFromContext(r)
+	userID, err := getUserIDFromRequest(r)
 	if err != nil {
 		return err
 	}
@@ -72,7 +72,7 @@ func DeleteResourceHandler(env *Env, w http.ResponseWriter, r *http.Request) err
 	vars := mux.Vars(r)
 	key := vars["key"]
 
-	err = env.ResourceService.DeleteResource(userID, key)
+	err = env.ResourceService.DeleteResource(*userID, key)
 	if err != nil && err != sql.ErrNoRows {
 		return err
 	}
@@ -88,29 +88,16 @@ func DeleteResourceHandler(env *Env, w http.ResponseWriter, r *http.Request) err
 }
 
 func ListResourcesHandler(env *Env, w http.ResponseWriter, r *http.Request) error {
-	userID, err := getUserIDFromContext(r)
+	userID, err := getUserIDFromRequest(r)
 	if err != nil {
 		return err
 	}
 
-	resources, err := env.ResourceService.ListResources(userID)
+	resources, err := env.ResourceService.ListResources(*userID)
 	if err != nil {
 		return err
 	}
 
 	env.Render.JSON(w, http.StatusOK, resources)
 	return nil
-}
-
-func getUserIDFromContext(r *http.Request) (int, error) {
-	userID := -1
-	userIDFromCtx, ok := r.Context().Value("user_id").(int)
-	if ok {
-		userID = userIDFromCtx
-	}
-	if userID == -1 {
-		return userID, fmt.Errorf("failed to parse user_id from context")
-	}
-
-	return userID, nil
 }

@@ -121,6 +121,10 @@ func (s fakeUserService) UpdateUserQuota(userID int, quota *int) (*models.User, 
 		return nil, fmt.Errorf("user service error")
 	}
 
+	if userID == 2 {
+		return nil, sql.ErrNoRows
+	}
+
 	return &models.User{
 		ID:    userID,
 		Email: "test@test.com",
