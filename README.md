@@ -10,6 +10,16 @@ You need authenticate using OAuth 2.0 and the Client Credentials grant to access
 
 ### Endpoints
 
+Authentication endpoint:
+- [POST /token](#post-token)
+
+Resources endpoint:
+- [GET /resources](#get-resources)
+- [GET /resources/\<resource-id\>](#get-resourcesresource-id)
+- [DELETE /resources/\<resource-id\>](#delete-resourcesresource-id)
+- [POST /resources](#post-resources)
+
+
 #### `POST /token`
 
 POST Form fields
