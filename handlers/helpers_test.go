@@ -53,7 +53,7 @@ func fakeHandler(opt *fakeHandlerOptions) http.Handler {
 		resourceServiceListResourcesReturnError = opt.resourceServiceListResourcesReturnError
 	}
 
-	userServiceQuota := -1
+	userServiceQuota := services.UserQuotaUndefined
 	if opt != nil && opt.userServiceQuota != nil {
 		userServiceQuota = *opt.userServiceQuota
 	}
@@ -91,6 +91,11 @@ func (s fakeUserService) CreateUser(email string, password string, isAdmin bool,
 		return nil, err
 	}
 
+	if quota == nil {
+		undefinedQuota := services.UserQuotaUndefined
+		quota = &undefinedQuota
+	}
+
 	return &models.User{
 		ID:    1,
 		Email: email,
@@ -125,9 +130,9 @@ func (s fakeUserService) UpdateUserQuota(userID int, quota *int) (*models.User, 
 		return nil, sql.ErrNoRows
 	}
 
-	quotaUndefined := -1
 	if quota == nil {
-		quota = &quotaUndefined
+		undefinedQuota := services.UserQuotaUndefined
+		quota = &undefinedQuota
 	}
 
 	return &models.User{

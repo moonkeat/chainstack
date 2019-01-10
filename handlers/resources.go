@@ -6,6 +6,8 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+
+	"github.com/moonkeat/chainstack/services"
 )
 
 func CreateResourceHandler(env *Env, w http.ResponseWriter, r *http.Request) error {
@@ -24,7 +26,7 @@ func CreateResourceHandler(env *Env, w http.ResponseWriter, r *http.Request) err
 		return err
 	}
 
-	if user.Quota != nil && *user.Quota < len(resources)+1 && *user.Quota != -1 {
+	if user.Quota != nil && *user.Quota < len(resources)+1 && *user.Quota != services.UserQuotaUndefined {
 		return HandlerError{
 			StatusCode:  http.StatusForbidden,
 			ActualError: fmt.Errorf("resource quota exceeded"),

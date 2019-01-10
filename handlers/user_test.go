@@ -159,7 +159,7 @@ func TestCreateUserHandler(t *testing.T) {
 		t.Errorf("handler returned wrong status code: got %v want %v",
 			status, http.StatusCreated)
 	}
-	expected = `{"id":1,"email":"test@test.com","admin":false}`
+	expected = `{"id":1,"email":"test@test.com","admin":false,"quota":-1}`
 	if rr.Body.String() != expected {
 		t.Errorf("handler returned unexpected body: got %v want %v",
 			rr.Body.String(), expected)
@@ -183,7 +183,7 @@ func TestCreateUserHandler(t *testing.T) {
 		t.Errorf("handler returned wrong status code: got %v want %v",
 			status, http.StatusCreated)
 	}
-	expected = `{"id":1,"email":"test@test.com","admin":true}`
+	expected = `{"id":1,"email":"test@test.com","admin":true,"quota":-1}`
 	if rr.Body.String() != expected {
 		t.Errorf("handler returned unexpected body: got %v want %v",
 			rr.Body.String(), expected)

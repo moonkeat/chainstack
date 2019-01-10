@@ -11,6 +11,8 @@ import (
 	"github.com/moonkeat/chainstack/models"
 )
 
+const UserQuotaUndefined = -1
+
 type UserService interface {
 	CreateUser(email string, password string, isAdmin bool, quota *int) (*models.User, error)
 	GetUser(userID int) (*models.User, error)
@@ -57,7 +59,7 @@ func (s userService) CreateUser(email string, password string, isAdmin bool, quo
 
 func (s userService) GetUser(userID int) (*models.User, error) {
 	user := models.User{}
-	err := s.DB.Get(&user, "SELECT id, email, admin, COALESCE(quota, -1) as quota FROM users WHERE id = $1", userID)
+	err := s.DB.Get(&user, fmt.Sprintf("SELECT id, email, admin, COALESCE(quota, %d) as quota FROM users WHERE id = $1", UserQuotaUndefined), userID)
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +98,7 @@ func (s userService) DeleteUser(userID int) error {
 
 func (s userService) ListUsers() ([]models.User, error) {
 	users := []models.User{}
-	err := s.DB.Select(&users, "SELECT id, email, admin, COALESCE(quota, -1) as quota FROM users")
+	err := s.DB.Select(&users, fmt.Sprintf("SELECT id, email, admin, COALESCE(quota, %d) as quota FROM users", UserQuotaUndefined))
 	if err != nil && err != sql.ErrNoRows {
 		return nil, err
 	}
@@ -106,7 +108,7 @@ func (s userService) ListUsers() ([]models.User, error) {
 
 func (s userService) AuthenticateUser(email string, password string) (*models.User, error) {
 	user := models.User{}
-	err := s.DB.Get(&user, "SELECT id, email, password, admin FROM users WHERE lower(email) = lower($1)", email)
+	err := s.DB.Get(&user, fmt.Sprintf("SELECT id, email, password, admin, COALESCE(quota, %d) as quota FROM users WHERE lower(email) = lower($1)", UserQuotaUndefined), email)
 	if err != nil && err != sql.ErrNoRows {
 		return nil, err
 	}

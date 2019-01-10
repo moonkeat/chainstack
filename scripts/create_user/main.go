@@ -15,7 +15,7 @@ func main() {
 	emailPtr := flag.String("email", "", "user email")
 	passwordPtr := flag.String("password", "", "user password")
 	isAdminPtr := flag.Bool("admin", false, "add admin user")
-	quotaPtr := flag.Int("quota", -1, "user quota")
+	quotaPtr := flag.Int("quota", services.UserQuotaUndefined, "user quota")
 
 	flag.Parse()
 
@@ -26,8 +26,11 @@ func main() {
 	}
 
 	var quota *int
-	if *quotaPtr != -1 {
+	if *quotaPtr != services.UserQuotaUndefined {
 		quota = quotaPtr
+	}
+	if quota != nil && *quota < 0 {
+		log.Fatalf("User quota should be -1 (unlimited quota) or at least 0")
 	}
 
 	userService := services.NewUserService(db)
