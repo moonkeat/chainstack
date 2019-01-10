@@ -19,6 +19,12 @@ Resources endpoint:
 - [DELETE /resources/\<resource-id\>](#delete-resourcesresource-id)
 - [POST /resources](#post-resources)
 
+Users endpoint:
+- [GET /users](#get-users)
+- [GET /users/\<user-id\>](#get-usersuser-id)
+- [DELETE /users/\<user-id\>](#delete-usersuser-id)
+- [POST /users](#post-resources)
+
 
 #### `POST /token`
 
@@ -193,6 +199,216 @@ Possible errors [error response format](#error-response)
 | Status code | Message (reason)                                              |
 |-------------|---------------------------------------------------------------|
 | 403         | resource quota exceeded                                       |
+| 401         | access denied (invalid access token)                          |
+| 500         | internal server error                                         |
+
+
+#### `GET /users`
+
+List all the users in the system.
+
+This endpoint requires [authentication](#authentication).
+
+Sample request
+```
+curl "http://localhost:8080/users" \
+     -H 'Authorization: Bearer <access token>'
+```
+
+Sample response
+```
+[
+  {
+    "id": 1,
+    "email": "test1@test.com",
+    "admin": false,
+    "quota": -1
+  }
+]
+```
+| Field        | Description                                                                       |
+|--------------|-----------------------------------------------------------------------------------|
+| id           | (required) unique identifier for the user                                         |
+| email        | (required) user's email                                                           |
+| admin        | (required) true is user is admin user                                             |
+| quota        | (required) user's quota to create resource, -1 means quota undefined              |
+
+
+Possible errors [error response format](#error-response)
+
+| Status code | Message (reason)                                              |
+|-------------|---------------------------------------------------------------|
+| 401         | access denied (invalid access token)                          |
+| 500         | internal server error                                         |
+
+
+#### `GET /users/<user id>`
+
+Get user by user id.
+
+This endpoint requires [authentication](#authentication).
+
+Sample request
+```
+curl "http://localhost:8080/users/1" \
+     -H 'Authorization: Bearer <access token>'
+```
+
+Sample response
+```
+{
+  "id": 1,
+  "email": "test1@test.com",
+  "admin": false,
+  "quota": -1
+}
+```
+| Field        | Description                                                                       |
+|--------------|-----------------------------------------------------------------------------------|
+| id           | (required) unique identifier for the user                                         |
+| email        | (required) user's email                                                           |
+| admin        | (required) true is user is admin user                                             |
+| quota        | (required) user's quota to create resource, -1 means quota undefined              |
+
+
+Possible errors [error response format](#error-response)
+
+| Status code | Message (reason)                                              |
+|-------------|---------------------------------------------------------------|
+| 401         | access denied (invalid access token)                          |
+| 404         | user not found                                                |
+| 500         | internal server error                                         |
+
+
+#### `DELETE /users/<user id>`
+
+Delete user by user id.
+
+This endpoint requires [authentication](#authentication).
+
+Sample request
+```
+curl -X "DELETE" "http://localhost:8080/users/1" \
+     -H 'Authorization: Bearer <access token>'
+```
+
+Sample response
+```
+This endpoint will return http status 204 with no body content if the user deleted successfully
+```
+
+Possible errors [error response format](#error-response)
+
+| Status code | Message (reason)                                              |
+|-------------|---------------------------------------------------------------|
+| 401         | access denied (invalid access token)                          |
+| 404         | user not found                                                |
+| 500         | internal server error                                         |
+
+
+#### `POST /users`
+
+Create a user.
+
+This endpoint requires [authentication](#authentication).
+
+Sample request
+```
+curl -X "POST" "http://localhost:8080/users" \
+     -H 'Authorization: Bearer <access token>'
+     -H 'Content-Type: application/json' \
+     -d $'{
+          "email": "test1@test.com",
+          "admin": false,
+          "password": "password"
+        }'
+```
+
+JSON Body fields
+
+| Field        | Description                                                                       |
+|--------------|-----------------------------------------------------------------------------------|
+| email        | (required) user's email                                                           |
+| admin        | (required) true is user is admin user                                             |
+| password     | (required) user's password (must be at least 8 characters)                        |
+| quota        | (optional) user's quota to create resource (must be at least 0)                   |
+
+Sample response
+```
+{
+  "id": 1,
+  "email": "test1@test.com",
+  "admin": false,
+  "quota": -1
+}
+```
+| Field        | Description                                                                       |
+|--------------|-----------------------------------------------------------------------------------|
+| id           | (required) unique identifier for the user                                         |
+| email        | (required) user's email                                                           |
+| admin        | (required) true is user is admin user                                             |
+| quota        | (required) user's quota to create resource, -1 means quota undefined              |
+
+
+Possible errors [error response format](#error-response)
+
+| Status code | Message (reason)                                              |
+|-------------|---------------------------------------------------------------|
+| 400         | request body is nil                                           |
+| 400         | failed to parse request body as json, err: reason             |
+| 400         | invalid email: '' is not a valid email                        |
+| 400         | invalid password: password should be at least 8 characters    |
+| 400         | invalid quota: quota should be at least 0                     |
+| 401         | access denied (invalid access token)                          |
+| 500         | internal server error                                         |
+
+
+#### `PUT /users/<user id>/quota`
+
+Update user's quota.
+
+This endpoint requires [authentication](#authentication).
+
+Sample request
+```
+curl -X "PUT" "http://localhost:8080/users/1/quota" \
+     -H 'Authorization: Bearer <access token>'
+     -H 'Content-Type: application/json' \
+     -d $'{
+          "quota": 3
+        }'
+```
+
+JSON Body fields
+
+| Field        | Description                                                                       |
+|--------------|-----------------------------------------------------------------------------------|
+| quota        | (optional) user's quota to create resource (must be at least 0)                   |
+
+Sample response
+```
+{
+  "id": 1,
+  "email": "test1@test.com",
+  "admin": false,
+  "quota": 3
+}
+```
+| Field        | Description                                                                       |
+|--------------|-----------------------------------------------------------------------------------|
+| id           | (required) unique identifier for the user                                         |
+| email        | (required) user's email                                                           |
+| admin        | (required) true is user is admin user                                             |
+| quota        | (required) user's quota to create resource, -1 means quota undefined              |
+
+
+Possible errors [error response format](#error-response)
+
+| Status code | Message (reason)                                              |
+|-------------|---------------------------------------------------------------|
+| 400         | request body is nil                                           |
+| 400         | failed to parse request body as json, err: reason             |
+| 400         | invalid quota: quota should be at least 0                     |
 | 401         | access denied (invalid access token)                          |
 | 500         | internal server error                                         |
 
