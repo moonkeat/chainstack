@@ -20,6 +20,12 @@ func CreateResourceHandler(env *Env, w http.ResponseWriter, r *http.Request) err
 	if err != nil && err != sql.ErrNoRows {
 		return err
 	}
+	if err == sql.ErrNoRows {
+		return HandlerError{
+			StatusCode:  http.StatusForbidden,
+			ActualError: fmt.Errorf("access denied"),
+		}
+	}
 
 	resources, err := env.ResourceService.ListResources(*userID)
 	if err != nil {
