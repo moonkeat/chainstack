@@ -617,7 +617,29 @@ func TestUpdateUserQuotaHandler(t *testing.T) {
 			rr.Body.String(), expected)
 	}
 
-	// Should return 200 with all users
+	// Should return 400 if quota invalid
+	handler = fakeHandler(nil)
+	rr = httptest.NewRecorder()
+	req, err = http.NewRequest("PUT", "/users/1/quota", strings.NewReader(`{
+		"quota": -1
+	}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Authorization", "Bearer correcttoken")
+
+	handler.ServeHTTP(rr, req)
+	if status := rr.Code; status != http.StatusBadRequest {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusBadRequest)
+	}
+	expected = `{"code":400,"message":"invalid quota: quota should be at least 0"}`
+	if rr.Body.String() != expected {
+		t.Errorf("handler returned unexpected body: got %v want %v",
+			rr.Body.String(), expected)
+	}
+
+	// Should return 200 with updated user information
 	handler = fakeHandler(nil)
 	rr = httptest.NewRecorder()
 	req, err = http.NewRequest("PUT", "/users/1/quota", strings.NewReader(`{
@@ -634,6 +656,26 @@ func TestUpdateUserQuotaHandler(t *testing.T) {
 			status, http.StatusOK)
 	}
 	expected = `{"id":1,"email":"test@test.com","admin":false,"quota":10}`
+	if rr.Body.String() != expected {
+		t.Errorf("handler returned unexpected body: got %v want %v",
+			rr.Body.String(), expected)
+	}
+
+	// Should return 200 and set user quota to -1 if quota undefined
+	handler = fakeHandler(nil)
+	rr = httptest.NewRecorder()
+	req, err = http.NewRequest("PUT", "/users/1/quota", strings.NewReader(`{}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Authorization", "Bearer correcttoken")
+
+	handler.ServeHTTP(rr, req)
+	if status := rr.Code; status != http.StatusOK {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusOK)
+	}
+	expected = `{"id":1,"email":"test@test.com","admin":false,"quota":-1}`
 	if rr.Body.String() != expected {
 		t.Errorf("handler returned unexpected body: got %v want %v",
 			rr.Body.String(), expected)

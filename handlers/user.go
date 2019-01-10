@@ -107,6 +107,13 @@ func UpdateUserQuotaHandler(env *Env, w http.ResponseWriter, r *http.Request) er
 		}
 	}
 
+	if user.Quota != nil && *user.Quota < 0 {
+		return HandlerError{
+			StatusCode:  http.StatusBadRequest,
+			ActualError: fmt.Errorf("invalid quota: quota should be at least 0"),
+		}
+	}
+
 	userData, err := env.UserService.UpdateUserQuota(*userID, user.Quota)
 	if err != nil && err != sql.ErrNoRows {
 		return err
