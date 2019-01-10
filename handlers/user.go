@@ -30,6 +30,13 @@ func CreateUserHandler(env *Env, w http.ResponseWriter, r *http.Request) error {
 	}
 	defer r.Body.Close()
 
+	if user.Quota != nil && *user.Quota < 0 {
+		return HandlerError{
+			StatusCode:  http.StatusBadRequest,
+			ActualError: fmt.Errorf("invalid quota: quota should be at least 0"),
+		}
+	}
+
 	userData, err := env.UserService.CreateUser(user.Email, user.Password, user.Admin, user.Quota)
 	if err != nil {
 		switch err.(type) {
