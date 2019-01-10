@@ -23,7 +23,12 @@ Users endpoint:
 - [GET /users](#get-users)
 - [GET /users/\<user-id\>](#get-usersuser-id)
 - [DELETE /users/\<user-id\>](#delete-usersuser-id)
-- [POST /users](#post-resources)
+- [POST /users](#post-users)
+- [PUT /users/\<user-id\>/quota](#put-usersuser-idquota)
+- [GET /users/\<user-id\>/resources](#get-usersuser-idresources)
+- [GET /users/\<user-id\>/resources/\<resource-id\>](#get-usersuser-idresourcesresource-id)
+- [DELETE /users/\<user-id\>/resources/\<resource-id\>](#delete-usersuser-idresourcesresource-id)
+- [POST /users/\<user-id\>/resources](#post-usersuser-idresources)
 
 
 #### `POST /token`
@@ -109,7 +114,7 @@ Possible errors [error response format](#error-response)
 | 500         | internal server error                                         |
 
 
-#### `GET /resources/<resource id>`
+#### `GET /resources/<resource-id>`
 
 Get resource that belong to the authenticated user by resource id.
 
@@ -143,7 +148,7 @@ Possible errors [error response format](#error-response)
 | 500         | internal server error                                         |
 
 
-#### `DELETE /resources/<resource id>`
+#### `DELETE /resources/<resource-id>`
 
 Delete resource that belong to the authenticated user by resource id.
 
@@ -242,7 +247,7 @@ Possible errors [error response format](#error-response)
 | 500         | internal server error                                         |
 
 
-#### `GET /users/<user id>`
+#### `GET /users/<user-id>`
 
 Get user by user id.
 
@@ -280,7 +285,7 @@ Possible errors [error response format](#error-response)
 | 500         | internal server error                                         |
 
 
-#### `DELETE /users/<user id>`
+#### `DELETE /users/<user-id>`
 
 Delete user by user id.
 
@@ -363,7 +368,7 @@ Possible errors [error response format](#error-response)
 | 500         | internal server error                                         |
 
 
-#### `PUT /users/<user id>/quota`
+#### `PUT /users/<user-id>/quota`
 
 Update user's quota.
 
@@ -409,6 +414,135 @@ Possible errors [error response format](#error-response)
 | 400         | request body is nil                                           |
 | 400         | failed to parse request body as json, err: reason             |
 | 400         | invalid quota: quota should be at least 0                     |
+| 401         | access denied (invalid access token)                          |
+| 500         | internal server error                                         |
+
+#### `GET /users/<user-id>/resources`
+
+List all the resources belong to the requested user id.
+
+This endpoint requires [authentication](#authentication).
+
+Sample request
+```
+curl "http://localhost:8080/users/1/resources" \
+     -H 'Authorization: Bearer <access token>'
+```
+
+Sample response
+```
+[
+  {
+    "key": "bdd0f74c-0d0e-4b9d-9cd0-150bd7ea4025",
+    "created_at": "2019-01-10T15:12:44.979518Z"
+  }
+]
+```
+| Field        | Description                                                           |
+|--------------|-----------------------------------------------------------------------|
+| key          | (required) unique identifier for the resource                         |
+| created_at   | (required) timestamp when the resource was created                    |
+
+
+Possible errors [error response format](#error-response)
+
+| Status code | Message (reason)                                              |
+|-------------|---------------------------------------------------------------|
+| 401         | access denied (invalid access token)                          |
+| 500         | internal server error                                         |
+
+
+#### `GET /users/<user-id>/resources/<resource-id>`
+
+Get resource that belong to requested user by resource id.
+
+This endpoint requires [authentication](#authentication).
+
+Sample request
+```
+curl "http://localhost:8080/users/1/resources/bdd0f74c-0d0e-4b9d-9cd0-150bd7ea4025" \
+     -H 'Authorization: Bearer <access token>'
+```
+
+Sample response
+```
+{
+  "key": "bdd0f74c-0d0e-4b9d-9cd0-150bd7ea4025",
+  "created_at": "2019-01-10T15:12:44.979518Z"
+}
+```
+| Field        | Description                                                           |
+|--------------|-----------------------------------------------------------------------|
+| key          | (required) unique identifier for the resource                         |
+| created_at   | (required) timestamp when the resource was created                    |
+
+
+Possible errors [error response format](#error-response)
+
+| Status code | Message (reason)                                              |
+|-------------|---------------------------------------------------------------|
+| 403         | access denied (resource not found)                            |
+| 401         | access denied (invalid access token)                          |
+| 500         | internal server error                                         |
+
+
+#### `DELETE /users/<user-id>/resources/<resource-id>`
+
+Delete resource that belong to the requested user by resource id.
+
+This endpoint requires [authentication](#authentication).
+
+Sample request
+```
+curl -X "DELETE" "http://localhost:8080/users/1/resources/bdd0f74c-0d0e-4b9d-9cd0-150bd7ea4025" \
+     -H 'Authorization: Bearer <access token>'
+```
+
+Sample response
+```
+This endpoint will return http status 204 with no body content if the resource deleted successfully
+```
+
+Possible errors [error response format](#error-response)
+
+| Status code | Message (reason)                                              |
+|-------------|---------------------------------------------------------------|
+| 403         | access denied (resource not found)                            |
+| 401         | access denied (invalid access token)                          |
+| 500         | internal server error                                         |
+
+
+#### `POST /users/<user-id>/resources`
+
+Create a resource for the requested user.
+
+This endpoint requires [authentication](#authentication).
+
+Sample request
+```
+curl -X "POST" "http://localhost:8080/users/1/resources" \
+     -H 'Authorization: Bearer <access token>'
+```
+
+Sample response
+```
+{
+  "key": "bdd0f74c-0d0e-4b9d-9cd0-150bd7ea4025",
+  "created_at": "2019-01-10T15:12:44.979518Z"
+}
+```
+| Field        | Description                                                           |
+|--------------|-----------------------------------------------------------------------|
+| key          | (required) unique identifier for the resource                         |
+| created_at   | (required) timestamp when the resource was created                    |
+
+
+Possible errors [error response format](#error-response)
+
+| Status code | Message (reason)                                              |
+|-------------|---------------------------------------------------------------|
+| 403         | access denied (user not found)                            |
+| 403         | resource quota exceeded                                       |
 | 401         | access denied (invalid access token)                          |
 | 500         | internal server error                                         |
 
