@@ -1,3 +1,9 @@
+### Running API locally
+
+Run `docker-compose up`, the API will be running on port :8080.
+
+For demo purpose, an admin user will be created with username `admin@admin.com` and password `password`.
+
 ### Authentication
 
 You need authenticate using OAuth 2.0 and the Client Credentials grant to access the API.
