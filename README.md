@@ -10,9 +10,7 @@ You need authenticate using OAuth 2.0 and the Client Credentials grant to access
 
 ### Endpoints
 
-```
-POST /token
-```
+#### `POST /token`
 
 POST Form fields
 
@@ -32,7 +30,7 @@ curl -X "POST" "http://localhost:8080/token" \
      --data-urlencode "grant_type=client_credentials"
 ```
 
-Success response
+Sample response
 ```
 {
   "access_token": "4eaae3f3-871c-4073-b94c-b25c6ec52408",
@@ -49,7 +47,7 @@ Success response
 | scope        | (required) api that can be access by the token                        |
 
 
-Possible errors
+Possible errors [error response format](#error-response)
 
 | Status code | Message                                                       |
 |-------------|---------------------------------------------------------------|
@@ -57,6 +55,135 @@ Possible errors
 | 400         | client_id is required                                         |
 | 400         | client_secret is required                                     |
 | 401         | invalid credentials                                           |
+| 500         | internal server error                                         |
+
+
+#### `GET /resources`
+
+List all the resources belong to the authenticated user.
+
+This endpoint requires [authentication](#authentication).
+
+Sample request
+```
+curl "http://localhost:8080/resources" \
+     -H 'Authorization: Bearer <access token>'
+```
+
+Sample response
+```
+[
+  {
+    "key": "bdd0f74c-0d0e-4b9d-9cd0-150bd7ea4025",
+    "created_at": "2019-01-10T15:12:44.979518Z"
+  }
+]
+```
+| Field        | Description                                                           |
+|--------------|-----------------------------------------------------------------------|
+| key          | (required) unique identifier for the resource                         |
+| created_at   | (required) timestamp when the resource was created                    |
+
+
+Possible errors [error response format](#error-response)
+
+| Status code | Message (reason)                                              |
+|-------------|---------------------------------------------------------------|
+| 401         | access denied (invalid access token)                          |
+| 500         | internal server error                                         |
+
+
+#### `GET /resources/<resource id>`
+
+Get resource that belong to the authenticated user by resource id.
+
+This endpoint requires [authentication](#authentication).
+
+Sample request
+```
+curl "http://localhost:8080/resources/bdd0f74c-0d0e-4b9d-9cd0-150bd7ea4025" \
+     -H 'Authorization: Bearer <access token>'
+```
+
+Sample response
+```
+{
+  "key": "bdd0f74c-0d0e-4b9d-9cd0-150bd7ea4025",
+  "created_at": "2019-01-10T15:12:44.979518Z"
+}
+```
+| Field        | Description                                                           |
+|--------------|-----------------------------------------------------------------------|
+| key          | (required) unique identifier for the resource                         |
+| created_at   | (required) timestamp when the resource was created                    |
+
+
+Possible errors [error response format](#error-response)
+
+| Status code | Message (reason)                                              |
+|-------------|---------------------------------------------------------------|
+| 403         | access denied (no permission to view the resource)            |
+| 401         | access denied (invalid access token)                          |
+| 500         | internal server error                                         |
+
+
+#### `DELETE /resources/<resource id>`
+
+Delete resource that belong to the authenticated user by resource id.
+
+This endpoint requires [authentication](#authentication).
+
+Sample request
+```
+curl -X "DELETE" "http://localhost:8080/resources/bdd0f74c-0d0e-4b9d-9cd0-150bd7ea4025" \
+     -H 'Authorization: Bearer <access token>'
+```
+
+Sample response
+```
+This endpoint will return http status 204 with no body content if the resource deleted successfully
+```
+
+Possible errors [error response format](#error-response)
+
+| Status code | Message (reason)                                              |
+|-------------|---------------------------------------------------------------|
+| 403         | access denied (no permission to delete the resource)          |
+| 401         | access denied (invalid access token)                          |
+| 500         | internal server error                                         |
+
+
+#### `POST /resources`
+
+Create a resource for the authenticated user.
+
+This endpoint requires [authentication](#authentication).
+
+Sample request
+```
+curl -X "POST" "http://localhost:8080/resources" \
+     -H 'Authorization: Bearer <access token>'
+```
+
+Sample response
+```
+{
+  "key": "bdd0f74c-0d0e-4b9d-9cd0-150bd7ea4025",
+  "created_at": "2019-01-10T15:12:44.979518Z"
+}
+```
+| Field        | Description                                                           |
+|--------------|-----------------------------------------------------------------------|
+| key          | (required) unique identifier for the resource                         |
+| created_at   | (required) timestamp when the resource was created                    |
+
+
+Possible errors [error response format](#error-response)
+
+| Status code | Message (reason)                                              |
+|-------------|---------------------------------------------------------------|
+| 403         | resource quota exceeded                                       |
+| 401         | access denied (invalid access token)                          |
 | 500         | internal server error                                         |
 
 
