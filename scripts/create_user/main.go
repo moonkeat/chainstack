@@ -34,6 +34,15 @@ func main() {
 	}
 
 	userService := services.NewUserService(db)
+
+	user, err := userService.AuthenticateUser(*emailPtr, *passwordPtr)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if user != nil {
+		log.Println("User exists.")
+		return
+	}
 	_, err = userService.CreateUser(*emailPtr, *passwordPtr, *isAdminPtr, quota)
 	if err != nil {
 		log.Fatal(err)
