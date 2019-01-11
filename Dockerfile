@@ -6,7 +6,7 @@ WORKDIR /go/src/github.com/moonkeat/chainstack
 
 ADD . ./
 
-RUN apk add --no-cache curl gcc build-base
+RUN apk add --no-cache curl gcc build-base git
 
 RUN curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
 
