@@ -1,3 +1,11 @@
+### Environment Variables
+
+| Variable      | Description                                         | Example value                                              |
+|---------------|-----------------------------------------------------|------------------------------------------------------------|
+| DB_CONNSTRING | (required) Postgres connection string               | postgresql://postgres@localhost/chainstack?sslmode=disable |
+| IS_DEBUG      | (optional) Enable debug mode                        | 0 (default, disable) , 1 (enable)                          |
+| SERVER_ADD    | (optional) host and port the API will be running on | :8080 (default)                                            |
+
 ### Running API locally
 
 Run `docker-compose up`, the API will be running on port :8080.
